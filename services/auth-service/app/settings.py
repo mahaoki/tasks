@@ -9,14 +9,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    jwt_secret_key: str = Field(..., alias="JWT_SECRET_KEY")
-    jwt_algorithm: str = Field(..., alias="JWT_ALGORITHM")
     database_url: AnyUrl = Field(..., alias="DATABASE_URL")
-    smtp_host: str = Field(..., alias="SMTP_HOST")
-    smtp_port: int = Field(..., alias="SMTP_PORT")
-    smtp_user: str = Field(..., alias="SMTP_USER")
-    smtp_password: str = Field(..., alias="SMTP_PASSWORD")
-    cors_allow_origins: List[str] = Field(..., alias="CORS_ALLOW_ORIGINS")
+    jwt_private_key: str = Field(..., alias="JWT_PRIVATE_KEY")
+    jwt_public_key: str = Field(..., alias="JWT_PUBLIC_KEY")
+    jwt_algorithm: str = Field("RS256", alias="JWT_ALGORITHM")
+    jwt_key_id: str = Field(..., alias="JWT_KEY_ID")
+    access_token_expires_minutes: int = Field(15, alias="ACCESS_TOKEN_EXPIRES_MINUTES")
+    refresh_token_expires_days: int = Field(7, alias="REFRESH_TOKEN_EXPIRES_DAYS")
+    password_pepper: str | None = Field("", alias="PASSWORD_PEPPER")
+    redis_url: str | None = Field(None, alias="REDIS_URL")
+    cors_allow_origins: List[str] = Field(["*"], alias="CORS_ALLOW_ORIGINS")
 
     model_config = SettingsConfigDict(
         env_file=".env",
