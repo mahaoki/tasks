@@ -307,4 +307,3 @@ CREATE SCHEMA IF NOT EXISTS users;
 ---
 
 > **Pronto para implementar**: com este roadmap, basta gerar os skeletons, preencher Dockerfiles e compose, criar migrations e seeds, e começar os fluxos de autenticação e usuários. Em seguida, a UI do frontend poderá consumir `/auth` e `/users` para entregar Login/Reset/Dashboard.
-
