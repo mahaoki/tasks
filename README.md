@@ -19,6 +19,19 @@ make typecheck  # verifica tipos com mypy
 make test       # executa pytest com cobertura
 ```
 
+### Variáveis de ambiente
+
+As aplicações utilizam variáveis de ambiente para configurar chaves e serviços externos.
+Crie um arquivo `.env` local baseado em `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Este arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesmas
+variáveis diretamente no ambiente de execução ou utilize mecanismos seguros como
+Docker secrets e configurações da plataforma escolhida.
+
 ## Convenções de commit
 
 Utilizamos [Conventional Commits](https://www.conventionalcommits.org/) para padronizar as mensagens de commit.
