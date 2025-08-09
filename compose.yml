@@ -49,10 +49,15 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
-      - "traefik.http.routers.auth.entrypoints=web"
       - "traefik.http.services.auth.loadbalancer.server.port=8000"
-      - "traefik.http.routers.auth.middlewares=secure-headers@file,rate-limit@file"
+      - "traefik.http.routers.auth.rule=Host(`api.tasks.localhost`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.entrypoints=web"
+      - "traefik.http.routers.auth.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
+      - "traefik.http.routers.auth-login.rule=Host(`api.tasks.localhost`) && Path(`/auth/login`)"
+      - "traefik.http.routers.auth-login.entrypoints=web"
+      - "traefik.http.routers.auth-login.priority=100"
+      - "traefik.http.routers.auth-login.middlewares=secure-headers@file,rate-limit@file,login-rate-limit@file,cors@file,compress@file"
+      - "traefik.http.routers.auth-login.service=auth"
 
   user-service:
     build: ./services/user-service
@@ -61,10 +66,10 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.user.rule=Host(`user.localhost`)"
-      - "traefik.http.routers.user.entrypoints=web"
       - "traefik.http.services.user.loadbalancer.server.port=8000"
-      - "traefik.http.routers.user.middlewares=secure-headers@file,rate-limit@file"
+      - "traefik.http.routers.user.rule=Host(`api.tasks.localhost`) && PathPrefix(`/users`)"
+      - "traefik.http.routers.user.entrypoints=web"
+      - "traefik.http.routers.user.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
 
   web:
     build: ./web
@@ -73,10 +78,10 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web.rule=Host(`web.localhost`)"
-      - "traefik.http.routers.web.entrypoints=web"
       - "traefik.http.services.web.loadbalancer.server.port=3000"
-      - "traefik.http.routers.web.middlewares=secure-headers@file,rate-limit@file"
+      - "traefik.http.routers.web.rule=Host(`app.tasks.localhost`)"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.routers.web.middlewares=secure-headers@file,rate-limit@file,compress@file"
 
 networks:
   traefik:
