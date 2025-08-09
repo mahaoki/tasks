@@ -70,6 +70,18 @@ Para executar a aplicação web localmente em um ambiente macOS:
 
 O aplicativo estará disponível em [http://localhost:3000](http://localhost:3000).
 
+## Debug
+
+Algumas ferramentas úteis para depuração em ambiente local:
+
+- **Mailhog**: servidor SMTP falso para inspecionar e-mails enviados.
+  Após subir os containers com `docker compose up`, acesse a interface web em
+  [http://localhost:8025](http://localhost:8025). Utilize o host `mailhog` e
+  porta `1025` nas configurações de envio de e-mail das aplicações.
+- **pgcli**: cliente interativo para o Postgres. Conecte-se ao banco de dados
+  com `pgcli postgresql://app:app@localhost:5432/app` para executar consultas e
+  inspeções de dados.
+
 ## Convenções de commit
 
 Utilizamos [Conventional Commits](https://www.conventionalcommits.org/) para padronizar as mensagens de commit.

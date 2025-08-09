@@ -47,9 +47,17 @@ services:
     networks:
       - internal
       - traefik
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.auth.loadbalancer.server.port=8000"
+      - "traefik.http.services.auth.loadbalancer.healthcheck.path=/healthz"
+      - "traefik.http.services.auth.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.auth.loadbalancer.serversTransport=default@file"
       - "traefik.http.routers.auth.rule=Host(`api.tasks.localhost`) && PathPrefix(`/auth`)"
       - "traefik.http.routers.auth.entrypoints=web"
       - "traefik.http.routers.auth.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
@@ -64,9 +72,17 @@ services:
     networks:
       - internal
       - traefik
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.user.loadbalancer.server.port=8000"
+      - "traefik.http.services.user.loadbalancer.healthcheck.path=/healthz"
+      - "traefik.http.services.user.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.user.loadbalancer.serversTransport=default@file"
       - "traefik.http.routers.user.rule=Host(`api.tasks.localhost`) && PathPrefix(`/users`)"
       - "traefik.http.routers.user.entrypoints=web"
       - "traefik.http.routers.user.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
