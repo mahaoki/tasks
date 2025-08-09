@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Spinner } from '@/components/ui/spinner';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -17,12 +19,16 @@ export default function DashboardPage() {
   }, [router]);
 
   if (!ready) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="text-2xl font-bold flex items-center gap-2">Dashboard <Badge>Beta</Badge></h1>
     </div>
   );
 }

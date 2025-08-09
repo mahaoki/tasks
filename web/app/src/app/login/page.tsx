@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Form } from '@/components/ui/form';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -27,21 +29,28 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-4">
-        <Input
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button type="submit">Login</Button>
-      </form>
+      <Card className="w-80">
+        <CardContent>
+          <Form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input
+              placeholder="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              placeholder="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button type="submit">Login</Button>
+            <a href="/forgot-password" className="text-sm text-blue-500 self-end">
+              Esqueceu a senha?
+            </a>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
