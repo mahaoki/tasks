@@ -32,6 +32,44 @@ Este arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesm
 variáveis diretamente no ambiente de execução ou utilize mecanismos seguros como
 Docker secrets e configurações da plataforma escolhida.
 
+## Desenvolvimento local no macOS
+
+Para executar a aplicação web localmente em um ambiente macOS:
+
+1. Instale o [Node.js](https://nodejs.org/) 18 ou superior. Usuários de macOS podem utilizar o [Homebrew](https://brew.sh/):
+
+   ```bash
+   brew install node
+   ```
+
+2. Navegue até o diretório da aplicação e instale as dependências:
+
+   ```bash
+   cd web/app
+   npm install
+   ```
+
+3. Copie o arquivo de variáveis de ambiente:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. Inicie o servidor de desenvolvimento:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Rode os testes (opcional):
+
+   ```bash
+   npm test        # testes unitários
+   npm run test:e2e # testes end-to-end
+   ```
+
+O aplicativo estará disponível em [http://localhost:3000](http://localhost:3000).
+
 ## Convenções de commit
 
 Utilizamos [Conventional Commits](https://www.conventionalcommits.org/) para padronizar as mensagens de commit.
