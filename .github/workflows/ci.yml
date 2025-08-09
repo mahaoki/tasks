@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FEATURE_FLAGS: ${{ vars.FEATURE_FLAGS }}
+  SBOM: ${{ vars.SBOM || 'false' }}
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, user-service]
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../../requirements.txt
+      - name: Format
+        run: black --check .
+      - name: Lint
+        run: ruff .
+      - name: Typecheck
+        run: mypy .
+      - name: Run migrations
+        env:
+          PYTHONPATH: .
+          DATABASE_URL: sqlite:///test.db
+        run: alembic upgrade head
+      - name: Test
+        env:
+          PYTHONPATH: .
+          DATABASE_URL: sqlite:///test.db
+        run: pytest
+      - name: Build Docker image
+        run: docker build -t ${{ matrix.service }} .
+      - name: SBOM
+        if: env.SBOM == 'true'
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ matrix.service }}
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Format
+        run: npx prettier --check .
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Test
+        run: npm test
+      - name: Build Docker image
+        run: docker build -t web .
+      - name: SBOM
+        if: env.SBOM == 'true'
+        uses: anchore/sbom-action@v0
+        with:
+          image: web
