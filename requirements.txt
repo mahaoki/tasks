@@ -12,6 +12,8 @@ pytest
 pytest-cov
 httpx
 pydantic-settings
+prometheus-client
+email-validator
 black
 ruff
 mypy

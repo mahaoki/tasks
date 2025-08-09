@@ -43,7 +43,9 @@ services:
       - internal
 
   auth-service:
-    build: ./services/auth-service
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
     networks:
       - internal
       - traefik
@@ -68,7 +70,9 @@ services:
       - "traefik.http.routers.auth-login.service=auth"
 
   user-service:
-    build: ./services/user-service
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
     networks:
       - internal
       - traefik
@@ -88,7 +92,9 @@ services:
       - "traefik.http.routers.user.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
 
   web:
-    build: ./web
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     networks:
       - internal
       - traefik
