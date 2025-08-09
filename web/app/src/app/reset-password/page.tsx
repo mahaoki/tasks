@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Form } from '@/components/ui/form';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const search = useSearchParams();
   const token = search.get('token');
   const router = useRouter();
@@ -39,5 +39,13 @@ export default function ResetPasswordPage() {
         <Button type="submit">Redefinir</Button>
       </Form>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
