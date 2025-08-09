@@ -30,3 +30,8 @@ http:
         addVaryHeader: true
     compress:
       compress: {}
+  serversTransports:
+    default:
+      forwardingTimeouts:
+        dialTimeout: 5s
+        responseHeaderTimeout: 10s
