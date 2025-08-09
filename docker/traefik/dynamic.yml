@@ -15,4 +15,18 @@ http:
     rate-limit:
       rateLimit:
         average: 100
-        burst: 50
+        burst: 100
+        period: 1m
+    login-rate-limit:
+      rateLimit:
+        average: 5
+        burst: 5
+        period: 1m
+    cors:
+      headers:
+        accessControlAllowOriginList:
+          - "https://app.tasks.localhost"
+        accessControlAllowCredentials: true
+        addVaryHeader: true
+    compress:
+      compress: {}
