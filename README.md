@@ -32,6 +32,18 @@ Este arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesm
 variáveis diretamente no ambiente de execução ou utilize mecanismos seguros como
 Docker secrets e configurações da plataforma escolhida.
 
+## Execução com Docker Compose
+
+Para construir as imagens e iniciar todos os serviços, utilize:
+
+```bash
+docker compose build
+docker compose up
+```
+
+As aplicações web e APIs estarão acessíveis em `app.tasks.localhost` e
+`api.tasks.localhost`.
+
 ## Desenvolvimento local no macOS
 
 Para executar a aplicação web localmente em um ambiente macOS:
