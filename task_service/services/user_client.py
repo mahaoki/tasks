@@ -52,18 +52,17 @@ class UserServiceClient:
                 if resp.status_code == 404:
                     raise self._validation_error("Invalid sector_id")
                 resp.raise_for_status()
+                data = resp.json()
+                name = data.get("name")
+                if not name:
+                    raise self._validation_error("Invalid sector data")
+
+                self._sector_cache[sector_id] = name
+                return name
         except httpx.TimeoutException as exc:
             raise self._validation_error("User service request timed out") from exc
         except httpx.HTTPError as exc:
             raise self._validation_error("User service request failed") from exc
-
-        data = resp.json()
-        name = data.get("name")
-        if not name:
-            raise self._validation_error("Invalid sector data")
-
-        self._sector_cache[sector_id] = name
-        return name
 
     def _validation_error(self, message: str) -> HTTPException:
         return HTTPException(
