@@ -31,7 +31,7 @@ class ListRepository:
         stmt: Select[tuple[List]] = (
             select(List)
             .where(List.project_id == project_id)
-            .order_by(List.order)
+            .order_by(List.position)
             .offset(offset)
             .limit(limit)
         )
