@@ -8,7 +8,13 @@ from . import models
 def seed_initial_data(db: Session) -> None:
     # Seed roles
     if not db.query(models.Role).first():
-        db.add_all([models.Role(name="admin"), models.Role(name="user")])
+        db.add_all(
+            [
+                models.Role(name="admin"),
+                models.Role(name="manager"),
+                models.Role(name="user"),
+            ]
+        )
         db.commit()
     # Seed sectors
     if not db.query(models.Sector).first():
