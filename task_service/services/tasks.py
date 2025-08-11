@@ -3,13 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, List, Optional
 
-import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.core.settings import settings
 from task_service.domain.models import Task
 from task_service.domain.schemas import TaskCreate, TaskRead
 from task_service.repositories import ProjectRepository, TaskRepository
+from task_service.services.user_client import UserServiceClient
 
 
 class TaskService:
@@ -19,13 +18,11 @@ class TaskService:
         self,
         repository: TaskRepository | None = None,
         project_repository: ProjectRepository | None = None,
-        user_service_base_url: str | None = None,
+        user_client: UserServiceClient | None = None,
     ) -> None:
         self.repository = repository or TaskRepository()
         self.project_repository = project_repository or ProjectRepository()
-        self.user_service_base_url = user_service_base_url or str(
-            settings.user_service_base_url
-        )
+        self.user_client = user_client or UserServiceClient()
 
     async def create(self, session: AsyncSession, task_in: TaskCreate) -> TaskRead:
         await self._validate_assignees(task_in.assignee_ids)
@@ -116,25 +113,9 @@ class TaskService:
         }
 
     async def _validate_assignees(self, assignee_ids: List[int]) -> None:
-        if not assignee_ids:
-            return
-        async with httpx.AsyncClient(base_url=self.user_service_base_url) as client:
-            resp = await client.get(
-                "/users",
-                params={"ids": ",".join(map(str, assignee_ids))},
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            found_ids = {user["id"] for user in data.get("users", [])}
-            missing: set[int] = set(assignee_ids) - found_ids
-            if missing:
-                raise ValueError(f"Invalid assignee_ids: {sorted(missing)}")
+        await self.user_client.verify_users(assignee_ids)
 
     async def _validate_sector(self, sector_id: int | None) -> None:
         if sector_id is None:
             return
-        async with httpx.AsyncClient(base_url=self.user_service_base_url) as client:
-            resp = await client.get(f"/sectors/{sector_id}")
-            if resp.status_code == 404:
-                raise ValueError("Invalid sector_id")
-            resp.raise_for_status()
+        await self.user_client.get_sector_name(sector_id)
