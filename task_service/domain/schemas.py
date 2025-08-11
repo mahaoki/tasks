@@ -77,6 +77,8 @@ class TaskBase(BaseModel):
     start_date: datetime | None = None
     due_date: datetime | None = None
     completed_at: datetime | None = None
+    assignee_ids: list[int] = []
+    sector_id: int | None = None
     tags: list[str] = []
 
     @model_validator(mode="after")
@@ -96,13 +98,18 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    pass
+    code: str | None = None
 
 
 class TaskRead(TaskBase):
     id: int
+    code: str
     created_at: datetime
     updated_at: datetime
+    timeliness: str | None = None
+    days_total: int | None = None
+    days_elapsed: int | None = None
+    days_remaining: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
