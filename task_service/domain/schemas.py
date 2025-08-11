@@ -59,7 +59,7 @@ class ProjectMemberRead(ProjectMemberUpdate):
 class ListBase(BaseModel):
     project_id: int
     name: str
-    order: int | None = None
+    position: int | None = None
 
 
 class ListCreate(ListBase):
