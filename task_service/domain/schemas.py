@@ -48,6 +48,14 @@ class ProjectRead(ProjectBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProjectMemberUpdate(BaseModel):
+    role: Role
+
+
+class ProjectMemberRead(ProjectMemberUpdate):
+    user_id: int
+
+
 class ListBase(BaseModel):
     project_id: int
     name: str

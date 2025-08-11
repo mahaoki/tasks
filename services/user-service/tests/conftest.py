@@ -23,7 +23,10 @@ def client(
     monkeypatch.setenv("SMTP_PASSWORD", "pass")
     monkeypatch.setenv("CORS_ALLOW_ORIGINS", '["*"]')
 
-    sys.path.append(str(Path(__file__).resolve().parents[1]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    for key in list(sys.modules):
+        if key.startswith("app"):
+            sys.modules.pop(key, None)
     from app.database import Base, engine  # noqa: E402
     from app.main import app  # noqa: E402
 
