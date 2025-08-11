@@ -3,15 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import (
-    JSON,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-)
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from task_service.core.database import Base
@@ -54,6 +46,9 @@ class Task(Base):
     start_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    code: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    assignee_ids: Mapped[list[int]] = mapped_column(JSON, default=list)
+    sector_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

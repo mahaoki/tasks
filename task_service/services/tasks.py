@@ -1,0 +1,140 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, List, Optional
+
+import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from task_service.core.settings import settings
+from task_service.domain.models import Task
+from task_service.domain.schemas import TaskCreate, TaskRead
+from task_service.repositories import ProjectRepository, TaskRepository
+
+
+class TaskService:
+    """Business logic for :class:`~task_service.domain.models.Task`."""
+
+    def __init__(
+        self,
+        repository: TaskRepository | None = None,
+        project_repository: ProjectRepository | None = None,
+        user_service_base_url: str | None = None,
+    ) -> None:
+        self.repository = repository or TaskRepository()
+        self.project_repository = project_repository or ProjectRepository()
+        self.user_service_base_url = user_service_base_url or str(
+            settings.user_service_base_url
+        )
+
+    async def create(self, session: AsyncSession, task_in: TaskCreate) -> TaskRead:
+        await self._validate_assignees(task_in.assignee_ids)
+        await self._validate_sector(task_in.sector_id)
+        code = await self._generate_code(session, task_in.project_id)
+        task_with_code = task_in.model_copy(update={"code": code})
+        task = await self.repository.create(session, task_with_code)
+        return self._to_read_model(task)
+
+    async def get(self, session: AsyncSession, task_id: int) -> Optional[TaskRead]:
+        task = await self.repository.get(session, task_id)
+        if not task:
+            return None
+        return self._to_read_model(task)
+
+    async def list(
+        self,
+        session: AsyncSession,
+        *,
+        project_id: Optional[int] = None,
+        list_id: Optional[int] = None,
+        status: Optional[str] = None,
+        tag: Optional[str] = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> list[TaskRead]:
+        tasks = await self.repository.list(
+            session,
+            project_id=project_id,
+            list_id=list_id,
+            status=status,
+            tag=tag,
+            offset=offset,
+            limit=limit,
+        )
+        return [self._to_read_model(task) for task in tasks]
+
+    async def update(
+        self, session: AsyncSession, task_id: int, data: dict[str, Any]
+    ) -> Optional[TaskRead]:
+        if "assignee_ids" in data:
+            await self._validate_assignees(data["assignee_ids"])
+        if "sector_id" in data:
+            await self._validate_sector(data["sector_id"])
+        task = await self.repository.update(session, task_id, data)
+        if not task:
+            return None
+        return self._to_read_model(task)
+
+    async def delete(self, session: AsyncSession, task_id: int) -> bool:
+        return await self.repository.delete(session, task_id)
+
+    async def count_by_status(
+        self, session: AsyncSession, *, project_id: Optional[int] = None
+    ) -> dict[str, int]:
+        return await self.repository.count_by_status(session, project_id=project_id)
+
+    async def _generate_code(self, session: AsyncSession, project_id: int) -> str:
+        project = await self.project_repository.get(session, project_id)
+        if not project:
+            raise ValueError("Project not found")
+        seq = await self.repository.count_in_project(session, project_id) + 1
+        return f"{project.slug.upper()}-{seq}"
+
+    def _to_read_model(self, task: Task) -> TaskRead:
+        data = TaskRead.model_validate(task)
+        metrics = self._calculate_timeliness(task)
+        return data.model_copy(update=metrics)
+
+    def _calculate_timeliness(self, task: Task) -> dict[str, Any]:
+        now = datetime.utcnow()
+        start = task.start_date
+        due = task.due_date
+        completed = task.completed_at
+        days_total = (due - start).days if start and due else None
+        days_elapsed = ((completed or now) - start).days if start else None
+        days_remaining = (due - (completed or now)).days if due else None
+        timeliness: str | None = None
+        if completed and due:
+            timeliness = "on_time" if completed <= due else "late"
+        elif not completed and due and now > due:
+            timeliness = "overdue"
+        return {
+            "timeliness": timeliness,
+            "days_total": days_total,
+            "days_elapsed": days_elapsed,
+            "days_remaining": days_remaining,
+        }
+
+    async def _validate_assignees(self, assignee_ids: List[int]) -> None:
+        if not assignee_ids:
+            return
+        async with httpx.AsyncClient(base_url=self.user_service_base_url) as client:
+            resp = await client.get(
+                "/users",
+                params={"ids": ",".join(map(str, assignee_ids))},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            found_ids = {user["id"] for user in data.get("users", [])}
+            missing: set[int] = set(assignee_ids) - found_ids
+            if missing:
+                raise ValueError(f"Invalid assignee_ids: {sorted(missing)}")
+
+    async def _validate_sector(self, sector_id: int | None) -> None:
+        if sector_id is None:
+            return
+        async with httpx.AsyncClient(base_url=self.user_service_base_url) as client:
+            resp = await client.get(f"/sectors/{sector_id}")
+            if resp.status_code == 404:
+                raise ValueError("Invalid sector_id")
+            resp.raise_for_status()

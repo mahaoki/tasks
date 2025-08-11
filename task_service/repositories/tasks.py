@@ -72,3 +72,8 @@ class TaskRepository:
             stmt = stmt.where(Task.project_id == project_id)
         result = await session.execute(stmt)
         return {status: count for status, count in result.all()}
+
+    async def count_in_project(self, session: AsyncSession, project_id: int) -> int:
+        stmt = select(func.count(Task.id)).where(Task.project_id == project_id)
+        result = await session.execute(stmt)
+        return result.scalar_one()
