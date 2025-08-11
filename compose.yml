@@ -68,6 +68,9 @@ services:
       - "traefik.http.routers.auth-login.priority=100"
       - "traefik.http.routers.auth-login.middlewares=secure-headers@file,rate-limit@file,login-rate-limit@file,cors@file,compress@file"
       - "traefik.http.routers.auth-login.service=auth"
+      - "traefik.http.routers.api-root.rule=Host(`api.tasks.localhost`)"
+      - "traefik.http.routers.api-root.entrypoints=web"
+      - "traefik.http.routers.api-root.service=auth"
 
   user-service:
     build:
