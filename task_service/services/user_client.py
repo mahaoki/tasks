@@ -29,17 +29,16 @@ class UserServiceClient:
                     "/users", params={"ids": ",".join(map(str, ids))}
                 )
                 resp.raise_for_status()
+                data = resp.json()
+                found = {user["id"] for user in data.get("users", [])}
+                self._user_cache.update(found)
+                missing = set(ids) - found
+                if missing:
+                    raise self._validation_error(f"Invalid assignee_ids: {sorted(missing)}")
         except httpx.TimeoutException as exc:
             raise self._validation_error("User service request timed out") from exc
         except httpx.HTTPError as exc:
             raise self._validation_error("User service request failed") from exc
-
-        data = resp.json()
-        found = {user["id"] for user in data.get("users", [])}
-        self._user_cache.update(found)
-        missing = set(ids) - found
-        if missing:
-            raise self._validation_error(f"Invalid assignee_ids: {sorted(missing)}")
 
     async def get_sector_name(self, sector_id: int) -> str:
         if sector_id in self._sector_cache:
