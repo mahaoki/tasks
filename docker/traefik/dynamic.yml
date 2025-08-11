@@ -25,6 +25,7 @@ http:
     cors:
       headers:
         accessControlAllowOriginList:
+          - "http://app.tasks.localhost"
           - "https://app.tasks.localhost"
         accessControlAllowCredentials: true
         addVaryHeader: true
