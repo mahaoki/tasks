@@ -30,7 +30,7 @@ def list_users(
     page: int = 1,
     page_size: int = 10,
     db: Session = Depends(get_db),
-    payload: dict = Depends(security.require_roles(["admin"])),
+    payload: dict = Depends(security.require_roles(["admin", "manager"])),
 ):
     offset = (page - 1) * page_size
     users = db.query(models.User).offset(offset).limit(page_size).all()
@@ -41,8 +41,9 @@ def list_users(
 def create_user(
     user_in: schemas.UserCreate,
     db: Session = Depends(get_db),
-    payload: dict = Depends(security.require_roles(["admin"])),
+    payload: dict = Depends(security.require_roles(["admin", "manager"], ["user"])),
 ):
+    security.enforce_allowed_roles(payload, user_in.roles)
     existing = db.query(models.User).filter_by(email=user_in.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -68,11 +69,18 @@ def update_user(
     user_id: UUID,
     user_in: schemas.UserUpdate,
     db: Session = Depends(get_db),
-    payload: dict = Depends(security.require_roles(["admin"])),
+    payload: dict = Depends(security.require_roles(["admin", "manager"], ["user"])),
 ):
     user = db.get(models.User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if "manager" in payload.get("roles", []) and any(
+        r.name != "user" for r in user.roles
+    ):
+        raise HTTPException(
+            status_code=403, detail="Managers can only manage collaborators"
+        )
+    security.enforce_allowed_roles(payload, user_in.roles or [])
     if user_in.full_name is not None:
         user.full_name = user_in.full_name
     if user_in.roles is not None:
@@ -93,7 +101,7 @@ def update_user(
 @router.get("/roles", response_model=list[schemas.RoleRead])
 def list_roles(
     db: Session = Depends(get_db),
-    payload: dict = Depends(security.require_roles(["admin"])),
+    payload: dict = Depends(security.require_roles(["admin", "manager"])),
 ):
     return db.query(models.Role).all()
 

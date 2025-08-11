@@ -35,13 +35,29 @@ def get_current_payload(
     return decode_token(credentials.credentials)
 
 
-def require_roles(required: list[str]) -> Callable[[dict], dict]:
+def require_roles(
+    required: list[str], allowed_to_assign: list[str] | None = None
+) -> Callable[[dict], dict]:
     def dependency(payload: dict = Depends(get_current_payload)) -> dict:
         roles = payload.get("roles", [])
-        if any(role in roles for role in required):
-            return payload
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
-        )
+        if not any(role in roles for role in required):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        if allowed_to_assign is not None:
+            payload["_allowed_to_assign"] = allowed_to_assign
+        return payload
 
     return dependency
+
+
+def enforce_allowed_roles(payload: dict, target_roles: list[str]) -> None:
+    allowed = payload.get("_allowed_to_assign")
+    if allowed is None or "admin" in payload.get("roles", []):
+        return
+    if not all(role in allowed for role in target_roles or []):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot assign requested roles",
+        )
