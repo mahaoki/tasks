@@ -11,11 +11,15 @@ from alembic import context
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from task_service.core.database import Base  # noqa: E402
+from task_service.domain import models  # noqa: E402,F401
 
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except KeyError:
+        pass
 
 target_metadata = Base.metadata
 schema = config.get_main_option("version_table_schema", "public")
