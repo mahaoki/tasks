@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Spinner } from '@/components/ui/spinner';
 
-export default function withAuth<T>(Component: React.ComponentType<T>) {
+export default function withAuth<T extends object>(Component: React.ComponentType<T>) {
   return function AuthenticatedComponent(props: T) {
     const router = useRouter();
     const [checking, setChecking] = useState(true);
