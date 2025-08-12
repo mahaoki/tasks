@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core import permissions, security
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
-from task_service.core import permissions, security
+sys.path.pop(0)
 
 
 @pytest.fixture()

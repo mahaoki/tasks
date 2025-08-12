@@ -6,7 +6,7 @@ from typing import Any, Optional
 from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from task_service.core.database import Base
+from ..core.database import Base
 
 
 class Project(Base):

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -10,17 +12,21 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 os.environ["TASKS_DATABASE_URL"] = "sqlite+aiosqlite://"
 
-from task_service.api.tasks import get_task_service  # noqa: E402
-from task_service.core.database import Base, get_session  # noqa: E402
-from task_service.domain.schemas import (  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.api.tasks import get_task_service  # noqa: E402
+from app.core.database import Base, get_session  # noqa: E402
+from app.domain.schemas import (  # noqa: E402
     ErrorResponse,
     ProjectCreate,
     TaskCreate,
     TaskListResponse,
 )
-from task_service.main import app  # noqa: E402
-from task_service.repositories import ProjectRepository  # noqa: E402
-from task_service.services.tasks import TaskService  # noqa: E402
+from app.main import app  # noqa: E402
+from app.repositories import ProjectRepository  # noqa: E402
+from app.services.tasks import TaskService  # noqa: E402
+
+sys.path.pop(0)
 
 
 class DummyUserClient:

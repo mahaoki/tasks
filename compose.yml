@@ -94,6 +94,28 @@ services:
       - "traefik.http.routers.user.entrypoints=web"
       - "traefik.http.routers.user.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
 
+  task-service:
+    build:
+      context: .
+      dockerfile: services/task-service/Dockerfile
+    networks:
+      - internal
+      - traefik
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.tasks.loadbalancer.server.port=8000"
+      - "traefik.http.services.tasks.loadbalancer.healthcheck.path=/healthz"
+      - "traefik.http.services.tasks.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.tasks.loadbalancer.serversTransport=default@file"
+      - "traefik.http.routers.tasks.rule=Host(`api.tasks.localhost`) && PathPrefix(`/tasks`)"
+      - "traefik.http.routers.tasks.entrypoints=web"
+      - "traefik.http.routers.tasks.middlewares=secure-headers@file,rate-limit@file,cors@file,compress@file"
+
   web:
     build:
       context: .

@@ -4,13 +4,13 @@ from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import Comment
-from task_service.domain.schemas import CommentCreate
-from task_service.repositories import CommentRepository
+from ..domain.models import Comment
+from ..domain.schemas import CommentCreate
+from ..repositories import CommentRepository
 
 
 class CommentService:
-    """Business logic for :class:`~task_service.domain.models.Comment`."""
+    """Business logic for :class:`~app.domain.models.Comment`."""
 
     def __init__(self, repository: CommentRepository | None = None) -> None:
         self.repository = repository or CommentRepository()

@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.core.database import get_session
-from task_service.domain.schemas import ListCreate, ListRead
-from task_service.services import ListService
+from ..core.database import get_session
+from ..domain.schemas import ListCreate, ListRead
+from ..services import ListService
 
 router = APIRouter(tags=["lists"])
 

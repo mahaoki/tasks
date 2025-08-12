@@ -4,14 +4,13 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
+from alembic import context
 from sqlalchemy import engine_from_config, pool, text
 
-from alembic import context
+sys.path.append(str(Path(__file__).resolve().parents[1] / "app"))
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-from task_service.core.database import Base  # noqa: E402
-from task_service.domain import models  # noqa: E402,F401
+from app.core.database import Base  # noqa: E402
+from app.domain import models  # noqa: E402,F401
 
 config = context.config
 

@@ -4,13 +4,13 @@ from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import Project
-from task_service.domain.schemas import ProjectCreate
-from task_service.repositories import ProjectRepository
+from ..domain.models import Project
+from ..domain.schemas import ProjectCreate
+from ..repositories import ProjectRepository
 
 
 class ProjectService:
-    """Business logic for :class:`~task_service.domain.models.Project`."""
+    """Business logic for :class:`~app.domain.models.Project`."""
 
     def __init__(self, repository: ProjectRepository | None = None) -> None:
         self.repository = repository or ProjectRepository()

@@ -7,16 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.core.database import get_session
-from task_service.core.settings import settings
-from task_service.domain.schemas import (
+from ..core.database import get_session
+from ..core.settings import settings
+from ..domain.schemas import (
     ProjectCreate,
-    ProjectRead,
     ProjectMemberRead,
     ProjectMemberUpdate,
+    ProjectRead,
 )
-from task_service.services import ProjectService
-
+from ..services import ProjectService
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -92,7 +91,9 @@ async def list_members(project_id: int) -> dict[str, list[ProjectMemberRead]]:
 
     This endpoint proxies the request to the user service.
     """
-    async with httpx.AsyncClient(base_url=str(settings.user_service_base_url)) as client:
+    async with httpx.AsyncClient(
+        base_url=str(settings.user_service_base_url)
+    ) as client:
         resp = await client.get(f"/projects/{project_id}/members")
     if resp.status_code == status.HTTP_404_NOT_FOUND:
         raise HTTPException(
@@ -115,7 +116,9 @@ async def put_member(
     member_in: ProjectMemberUpdate,
 ) -> ProjectMemberRead:
     """Add or update a project member by delegating to the user service."""
-    async with httpx.AsyncClient(base_url=str(settings.user_service_base_url)) as client:
+    async with httpx.AsyncClient(
+        base_url=str(settings.user_service_base_url)
+    ) as client:
         resp = await client.put(
             f"/projects/{project_id}/members/{user_id}",
             json=member_in.model_dump(),
@@ -133,7 +136,9 @@ async def put_member(
 )
 async def delete_member(project_id: int, user_id: int) -> Response:
     """Remove a project member via the user service."""
-    async with httpx.AsyncClient(base_url=str(settings.user_service_base_url)) as client:
+    async with httpx.AsyncClient(
+        base_url=str(settings.user_service_base_url)
+    ) as client:
         resp = await client.delete(f"/projects/{project_id}/members/{user_id}")
     if resp.status_code == status.HTTP_404_NOT_FOUND:
         raise HTTPException(

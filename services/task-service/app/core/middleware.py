@@ -5,8 +5,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from task_service.core.logging import request_id_ctx_var
-from task_service.core.metrics import REQUEST_COUNTER, REQUEST_LATENCY
+from .logging import request_id_ctx_var
+from .metrics import REQUEST_COUNTER, REQUEST_LATENCY
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
