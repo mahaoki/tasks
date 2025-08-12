@@ -5,6 +5,7 @@ from typing import Any
 import httpx
 from fastapi import Depends, HTTPException, status
 
+from .logging import project_id_ctx_var, user_id_ctx_var
 from .security import get_current_user
 from .settings import settings
 
@@ -58,6 +59,12 @@ def require_project_permission(action: str):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
             )
+
+        # Store identifiers in the logging context for traceability while
+        # keeping the log free from sensitive information.
+        project_id_ctx_var.set(str(project_id))
+        user_id_ctx_var.set(user["user_id"])
+
         return {"project_id": project_id, "user_id": user["user_id"], "role": role}
 
     return dependency
