@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     tasks_database_url: AnyUrl = Field(
-        "sqlite:///./tasks.db", alias="TASKS_DATABASE_URL"
+        "sqlite+aiosqlite:///./tasks.db", alias="TASKS_DATABASE_URL"
     )
     auth_jwks_url: AnyHttpUrl = Field(
         "http://auth-service/jwks.json", alias="AUTH_JWKS_URL"
