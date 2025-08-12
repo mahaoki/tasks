@@ -8,6 +8,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from .logging import user_id_ctx_var
 from .settings import settings
 
 JWKS_CACHE_TTL_SECONDS = 600
@@ -80,6 +81,11 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token claims"
         )
+
+    # Expose the user identifier to the logging context. Only the identifier is
+    # recorded to avoid leaking any PII.
+    user_id_ctx_var.set(user_id)
+
     return {"user_id": user_id, "sector_id": sector_id, "claims": payload}
 
 
