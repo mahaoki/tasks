@@ -28,7 +28,9 @@ Crie um arquivo `.env` local baseado em `.env.example`:
 cp .env.example .env
 ```
 
-Este arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesmas
+Este arquivo inclui, entre outras variáveis, `TASKS_DATABASE_URL`, que deve usar
+um driver assíncrono (por padrão `sqlite+aiosqlite:///./tasks.db`).
+O arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesmas
 variáveis diretamente no ambiente de execução ou utilize mecanismos seguros como
 Docker secrets e configurações da plataforma escolhida.
 
