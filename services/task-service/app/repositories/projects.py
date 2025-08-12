@@ -5,16 +5,14 @@ from typing import Any, Optional
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import Project, Task
-from task_service.domain.schemas import ProjectCreate
+from ..domain.models import Project, Task
+from ..domain.schemas import ProjectCreate
 
 
 class ProjectRepository:
-    """Data access layer for :class:`~task_service.domain.models.Project`."""
+    """Data access layer for :class:`~app.domain.models.Project`."""
 
-    async def create(
-        self, session: AsyncSession, project_in: ProjectCreate
-    ) -> Project:
+    async def create(self, session: AsyncSession, project_in: ProjectCreate) -> Project:
         project = Project(**project_in.model_dump())
         session.add(project)
         await session.commit()
@@ -24,9 +22,7 @@ class ProjectRepository:
     async def get(self, session: AsyncSession, project_id: int) -> Optional[Project]:
         return await session.get(Project, project_id)
 
-    async def get_by_slug(
-        self, session: AsyncSession, slug: str
-    ) -> Optional[Project]:
+    async def get_by_slug(self, session: AsyncSession, slug: str) -> Optional[Project]:
         stmt: Select[tuple[Project]] = select(Project).where(Project.slug == slug)
         result = await session.execute(stmt)
         return result.scalar_one_or_none()

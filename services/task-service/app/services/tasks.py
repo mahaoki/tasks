@@ -5,14 +5,14 @@ from typing import Any, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import Task
-from task_service.domain.schemas import Status, TaskCreate, TaskRead
-from task_service.repositories import ProjectRepository, TaskRepository
-from task_service.services.user_client import UserServiceClient
+from ..domain.models import Task
+from ..domain.schemas import Status, TaskCreate, TaskRead
+from ..repositories import ProjectRepository, TaskRepository
+from .user_client import UserServiceClient
 
 
 class TaskService:
-    """Business logic for :class:`~task_service.domain.models.Task`."""
+    """Business logic for :class:`~app.domain.models.Task`."""
 
     def __init__(
         self,

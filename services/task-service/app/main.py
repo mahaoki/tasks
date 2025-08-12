@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from task_service.api.health import router as health_router
-from task_service.api.router import router
-from task_service.core.logging import configure_logging
-from task_service.core.middleware import MetricsMiddleware, RequestIDMiddleware
+from .api.health import router as health_router
+from .api.router import router
+from .core.logging import configure_logging
+from .core.middleware import MetricsMiddleware, RequestIDMiddleware
 
 configure_logging()
 

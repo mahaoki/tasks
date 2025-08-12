@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.core.database import get_session
-from task_service.domain.schemas import (
+from ..core.database import get_session
+from ..domain.schemas import (
     Complexity,
     ErrorResponse,
     Priority,
@@ -18,7 +18,7 @@ from task_service.domain.schemas import (
     TaskListResponse,
     TaskRead,
 )
-from task_service.services import TaskService
+from ..services import TaskService
 
 router = APIRouter(tags=["tasks"])
 

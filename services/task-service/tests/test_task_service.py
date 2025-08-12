@@ -1,18 +1,22 @@
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
 
-from task_service.core.database import Base
-from task_service.domain.models import Task
-from task_service.domain.schemas import ProjectCreate, Status, TaskCreate
-from task_service.repositories import ProjectRepository
-from task_service.services.tasks import TaskService
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.core.database import Base
+from app.domain.models import Task
+from app.domain.schemas import ProjectCreate, Status, TaskCreate
+from app.repositories import ProjectRepository
+from app.services.tasks import TaskService
+
+sys.path.pop(0)
+from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 
 @pytest_asyncio.fixture()

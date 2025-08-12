@@ -5,8 +5,8 @@ from typing import Optional
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import ActivityLog
-from task_service.domain.schemas import ActivityLogCreate
+from ..domain.models import ActivityLog
+from ..domain.schemas import ActivityLogCreate
 
 
 class ActivityLogRepository:
@@ -19,7 +19,9 @@ class ActivityLogRepository:
         await session.refresh(activity)
         return activity
 
-    async def get(self, session: AsyncSession, activity_id: int) -> Optional[ActivityLog]:
+    async def get(
+        self, session: AsyncSession, activity_id: int
+    ) -> Optional[ActivityLog]:
         return await session.get(ActivityLog, activity_id)
 
     async def list(

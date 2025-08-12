@@ -5,7 +5,7 @@ from typing import Iterable
 import httpx
 from fastapi import HTTPException, status
 
-from task_service.core.settings import settings
+from ..core.settings import settings
 
 
 class UserServiceClient:
@@ -34,7 +34,9 @@ class UserServiceClient:
                 self._user_cache.update(found)
                 missing = set(ids) - found
                 if missing:
-                    raise self._validation_error(f"Invalid assignee_ids: {sorted(missing)}")
+                    raise self._validation_error(
+                        f"Invalid assignee_ids: {sorted(missing)}"
+                    )
         except httpx.TimeoutException as exc:
             raise self._validation_error("User service request timed out") from exc
         except httpx.HTTPError as exc:

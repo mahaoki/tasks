@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.core.database import get_session
-from task_service.core.metrics import TASKS_STATUS_GAUGE
-from task_service.services import TaskService
+from ..core.database import get_session
+from ..core.metrics import TASKS_STATUS_GAUGE
+from ..services import TaskService
 
 router = APIRouter()
 

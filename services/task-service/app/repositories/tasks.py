@@ -5,8 +5,8 @@ from typing import Any, Optional
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import Task
-from task_service.domain.schemas import TaskCreate
+from ..domain.models import Task
+from ..domain.schemas import TaskCreate
 
 
 class TaskRepository:

@@ -5,14 +5,12 @@ from typing import Any, Optional
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.domain.models import Comment
-from task_service.domain.schemas import CommentCreate
+from ..domain.models import Comment
+from ..domain.schemas import CommentCreate
 
 
 class CommentRepository:
-    async def create(
-        self, session: AsyncSession, comment_in: CommentCreate
-    ) -> Comment:
+    async def create(self, session: AsyncSession, comment_in: CommentCreate) -> Comment:
         comment = Comment(**comment_in.model_dump())
         session.add(comment)
         await session.commit()

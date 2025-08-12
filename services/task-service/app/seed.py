@@ -4,24 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-import sys
-from pathlib import Path
 
 import httpx
 
-sys.path.append(
-    str(Path(__file__).resolve().parents[1] / "services/task-service")
-)
-
-from task_service.core.database import async_session_factory
-from task_service.core.settings import settings
-from task_service.domain.schemas import (
-    ListCreate,
-    ProjectCreate,
-    Status,
-    TaskCreate,
-)
-from task_service.services import ListService, ProjectService, TaskService
+from .core.database import async_session_factory
+from .core.settings import settings
+from .domain.schemas import ListCreate, ProjectCreate, Status, TaskCreate
+from .services import ListService, ProjectService, TaskService
 
 DEFAULT_LISTS = ["Backlog", "In Progress", "Done"]
 ADMIN_USER_ID = 1

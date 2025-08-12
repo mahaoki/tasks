@@ -10,9 +10,16 @@ from fastapi.testclient import TestClient
 
 os.environ["TASKS_DATABASE_URL"] = "sqlite+aiosqlite://"
 
-from task_service.core.database import get_session
-from task_service.main import app
-from task_service.services import TaskService
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core.database import get_session
+from app.main import app
+from app.services import TaskService
+
+sys.path.pop(0)
 
 
 @pytest.fixture(autouse=True)

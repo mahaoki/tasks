@@ -8,9 +8,9 @@ from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from task_service.core.database import get_session
-from task_service.domain.schemas import CommentCreate, CommentRead
-from task_service.services import CommentService
+from ..core.database import get_session
+from ..domain.schemas import CommentCreate, CommentRead
+from ..services import CommentService
 
 router = APIRouter(tags=["comments"])
 

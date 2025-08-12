@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import types
+from pathlib import Path
 
 import httpx
 import jwt
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core import security
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.security import HTTPAuthorizationCredentials
 from jwt.utils import base64url_encode
 
-from task_service.core import security
+sys.path.pop(0)
 
 
 @pytest.fixture()
