@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Status(str, Enum):
@@ -136,6 +136,7 @@ class CommentRead(CommentBase):
     author_id: int | None = None
     created_at: datetime
     updated_at: datetime
+    mentions: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
