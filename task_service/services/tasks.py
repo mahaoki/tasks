@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from task_service.domain.models import Task
-from task_service.domain.schemas import TaskCreate, TaskRead
+from task_service.domain.schemas import Status, TaskCreate, TaskRead
 from task_service.repositories import ProjectRepository, TaskRepository
 from task_service.services.user_client import UserServiceClient
 
@@ -46,6 +46,14 @@ class TaskService:
         list_id: Optional[int] = None,
         status: Optional[str] = None,
         tag: Optional[str] = None,
+        assignee_id: Optional[int] = None,
+        sector_id: Optional[int] = None,
+        complexity: Optional[str] = None,
+        priority: Optional[str] = None,
+        search: Optional[str] = None,
+        timeliness: Optional[str] = None,
+        order_by: Optional[str] = None,
+        order: str = "asc",
         offset: int = 0,
         limit: int = 100,
     ) -> list[TaskRead]:
@@ -55,10 +63,41 @@ class TaskService:
             list_id=list_id,
             status=status,
             tag=tag,
+            assignee_id=assignee_id,
+            sector_id=sector_id,
+            complexity=complexity,
+            priority=priority,
+            search=search,
+            order_by=None if order_by == "timeliness" else order_by,
+            order=order,
             offset=offset,
             limit=limit,
         )
-        return [self._to_read_model(task) for task in tasks]
+        data = [self._to_read_model(task) for task in tasks]
+        if timeliness is not None:
+            data = [t for t in data if t.timeliness == timeliness]
+        if order_by == "timeliness":
+            order_map = {"on_time": 0, "late": 1, "overdue": 2, None: 3}
+            data.sort(
+                key=lambda t: order_map.get(t.timeliness, 3),
+                reverse=order.lower() == "desc",
+            )
+        return data
+
+    async def move(
+        self, session: AsyncSession, task_id: int, *, list_id: int
+    ) -> Optional[TaskRead]:
+        task = await self.repository.update(session, task_id, {"list_id": list_id})
+        if not task:
+            return None
+        return self._to_read_model(task)
+
+    async def archive(self, session: AsyncSession, task_id: int) -> Optional[TaskRead]:
+        data = {"status": Status.COMPLETED.value, "completed_at": datetime.utcnow()}
+        task = await self.repository.update(session, task_id, data)
+        if not task:
+            return None
+        return self._to_read_model(task)
 
     async def update(
         self, session: AsyncSession, task_id: int, data: dict[str, Any]
