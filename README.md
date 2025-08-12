@@ -4,10 +4,10 @@ Este repositório utiliza ferramentas de qualidade para garantir padrões consis
 
 ## Configuração do ambiente
 
-Instale as dependências de desenvolvimento e os hooks do pre-commit:
+Instale as dependências do projeto (incluindo `aiosqlite`) e os hooks do pre-commit:
 
 ```bash
-pip install pre-commit mypy pytest pytest-cov
+pip install -r requirements.txt
 pre-commit install
 ```
 
