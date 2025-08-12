@@ -36,7 +36,7 @@ class TaskRepository:
         order_by: Optional[str] = None,
         order: str = "asc",
         offset: int = 0,
-        limit: int = 100,
+        limit: int | None = 100,
     ) -> list[Task]:
         stmt: Select[tuple[Task]] = select(Task)
         if project_id is not None:
@@ -62,7 +62,9 @@ class TaskRepository:
             stmt = stmt.order_by(
                 column.asc() if order.lower() == "asc" else column.desc()
             )
-        stmt = stmt.offset(offset).limit(limit)
+        stmt = stmt.offset(offset)
+        if limit is not None:
+            stmt = stmt.limit(limit)
         result = await session.execute(stmt)
         return result.scalars().all()
 

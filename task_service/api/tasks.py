@@ -9,8 +9,15 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from task_service.core.database import get_session
-from task_service.domain.schemas import (Complexity, Priority, Status,
-                                         TaskCreate, TaskRead)
+from task_service.domain.schemas import (
+    Complexity,
+    ErrorResponse,
+    Priority,
+    Status,
+    TaskCreate,
+    TaskListResponse,
+    TaskRead,
+)
 from task_service.services import TaskService
 
 router = APIRouter(tags=["tasks"])
@@ -72,7 +79,7 @@ async def create_task(
 
 @router.get(
     "/projects/{project_id}/tasks",
-    response_model=dict[str, list[TaskRead]],
+    response_model=TaskListResponse,
 )
 async def list_tasks(
     project_id: int,
@@ -91,8 +98,8 @@ async def list_tasks(
     limit: int = Query(100, ge=1),
     session: AsyncSession = Depends(get_session),
     service: TaskService = Depends(get_task_service),
-) -> dict[str, list[TaskRead]]:
-    tasks = await service.list(
+) -> TaskListResponse:
+    tasks, total = await service.list(
         session,
         project_id=project_id,
         list_id=list_id,
@@ -109,10 +116,17 @@ async def list_tasks(
         offset=offset,
         limit=limit,
     )
-    return {"tasks": tasks}
+    return {
+        "tasks": tasks,
+        "pagination": {"total": total, "offset": offset, "limit": limit},
+    }
 
 
-@router.get("/tasks/{task_id}", response_model=TaskRead)
+@router.get(
+    "/tasks/{task_id}",
+    response_model=TaskRead,
+    responses={404: {"model": ErrorResponse}},
+)
 async def get_task(
     task_id: int,
     session: AsyncSession = Depends(get_session),
@@ -121,12 +135,19 @@ async def get_task(
     task = await service.get(session, task_id)
     if not task:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorResponse(
+                code="TASK_NOT_FOUND", message="Task not found"
+            ).model_dump(),
         )
     return task
 
 
-@router.patch("/tasks/{task_id}", response_model=TaskRead)
+@router.patch(
+    "/tasks/{task_id}",
+    response_model=TaskRead,
+    responses={404: {"model": ErrorResponse}},
+)
 async def update_task(
     task_id: int,
     task_in: TaskUpdate,
@@ -137,12 +158,19 @@ async def update_task(
     task = await service.update(session, task_id, data)
     if not task:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorResponse(
+                code="TASK_NOT_FOUND", message="Task not found"
+            ).model_dump(),
         )
     return task
 
 
-@router.post("/tasks/{task_id}/move", response_model=TaskRead)
+@router.post(
+    "/tasks/{task_id}/move",
+    response_model=TaskRead,
+    responses={404: {"model": ErrorResponse}},
+)
 async def move_task(
     task_id: int,
     body: MoveTaskBody,
@@ -152,12 +180,19 @@ async def move_task(
     task = await service.move(session, task_id, list_id=body.list_id)
     if not task:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorResponse(
+                code="TASK_NOT_FOUND", message="Task not found"
+            ).model_dump(),
         )
     return task
 
 
-@router.post("/tasks/{task_id}/archive", response_model=TaskRead)
+@router.post(
+    "/tasks/{task_id}/archive",
+    response_model=TaskRead,
+    responses={404: {"model": ErrorResponse}},
+)
 async def archive_task(
     task_id: int,
     session: AsyncSession = Depends(get_session),
@@ -166,7 +201,10 @@ async def archive_task(
     task = await service.archive(session, task_id)
     if not task:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorResponse(
+                code="TASK_NOT_FOUND", message="Task not found"
+            ).model_dump(),
         )
     return task
 
