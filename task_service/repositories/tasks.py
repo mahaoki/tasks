@@ -28,6 +28,13 @@ class TaskRepository:
         list_id: Optional[int] = None,
         status: Optional[str] = None,
         tag: Optional[str] = None,
+        assignee_id: Optional[int] = None,
+        sector_id: Optional[int] = None,
+        complexity: Optional[str] = None,
+        priority: Optional[str] = None,
+        search: Optional[str] = None,
+        order_by: Optional[str] = None,
+        order: str = "asc",
         offset: int = 0,
         limit: int = 100,
     ) -> list[Task]:
@@ -40,6 +47,21 @@ class TaskRepository:
             stmt = stmt.where(Task.status == status)
         if tag is not None:
             stmt = stmt.where(Task.tags.contains([tag]))
+        if assignee_id is not None:
+            stmt = stmt.where(Task.assignee_ids.contains([assignee_id]))
+        if sector_id is not None:
+            stmt = stmt.where(Task.sector_id == sector_id)
+        if complexity is not None:
+            stmt = stmt.where(Task.complexity == complexity)
+        if priority is not None:
+            stmt = stmt.where(Task.priority == priority)
+        if search is not None:
+            stmt = stmt.where(Task.title.ilike(f"%{search}%"))
+        if order_by is not None and hasattr(Task, order_by):
+            column = getattr(Task, order_by)
+            stmt = stmt.order_by(
+                column.asc() if order.lower() == "asc" else column.desc()
+            )
         stmt = stmt.offset(offset).limit(limit)
         result = await session.execute(stmt)
         return result.scalars().all()
