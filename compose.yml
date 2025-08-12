@@ -46,6 +46,8 @@ services:
     build:
       context: .
       dockerfile: services/auth-service/Dockerfile
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://app:app@postgres/app?options=-csearch_path%3Dauth"
     networks:
       - internal
       - traefik
@@ -76,6 +78,8 @@ services:
     build:
       context: .
       dockerfile: services/user-service/Dockerfile
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://app:app@postgres/app?options=-csearch_path%3Dusers"
     networks:
       - internal
       - traefik
@@ -98,6 +102,8 @@ services:
     build:
       context: .
       dockerfile: services/task-service/Dockerfile
+    environment:
+      TASKS_DATABASE_URL: "postgresql+asyncpg://app:app@postgres/app?options=-csearch_path%3Dtasks"
     networks:
       - internal
       - traefik
