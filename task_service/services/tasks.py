@@ -56,7 +56,7 @@ class TaskService:
         order: str = "asc",
         offset: int = 0,
         limit: int = 100,
-    ) -> list[TaskRead]:
+    ) -> tuple[list[TaskRead], int]:
         tasks = await self.repository.list(
             session,
             project_id=project_id,
@@ -70,8 +70,8 @@ class TaskService:
             search=search,
             order_by=None if order_by == "timeliness" else order_by,
             order=order,
-            offset=offset,
-            limit=limit,
+            offset=0,
+            limit=None,
         )
         data = [self._to_read_model(task) for task in tasks]
         if timeliness is not None:
@@ -82,7 +82,9 @@ class TaskService:
                 key=lambda t: order_map.get(t.timeliness, 3),
                 reverse=order.lower() == "desc",
             )
-        return data
+        total = len(data)
+        data = data[offset : offset + limit]
+        return data, total
 
     async def move(
         self, session: AsyncSession, task_id: int, *, list_id: int

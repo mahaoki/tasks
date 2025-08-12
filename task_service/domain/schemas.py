@@ -122,6 +122,22 @@ class TaskRead(TaskBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class Pagination(BaseModel):
+    total: int
+    offset: int
+    limit: int
+
+
+class TaskListResponse(BaseModel):
+    tasks: list[TaskRead]
+    pagination: Pagination
+
+
+class ErrorResponse(BaseModel):
+    code: str
+    message: str
+
+
 class CommentBase(BaseModel):
     task_id: int
     content: str
