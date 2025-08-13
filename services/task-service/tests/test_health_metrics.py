@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-import os
+import sys
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 # ruff: noqa: E402
-
-
-os.environ["TASKS_DATABASE_URL"] = "sqlite+aiosqlite://"
-
-import sys
-from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

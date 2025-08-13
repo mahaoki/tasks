@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..core.database import Base
@@ -47,9 +48,9 @@ class Task(Base):
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     code: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    assignee_ids: Mapped[list[int]] = mapped_column(JSON, default=list)
+    assignee_ids: Mapped[list[int]] = mapped_column(JSONB, default=list)
     sector_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -109,7 +110,7 @@ class ActivityLog(Base):
     )
     action: Mapped[str] = mapped_column(String, nullable=False)
     performed_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    details: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    details: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     task: Mapped[Optional[Task]] = relationship("Task", back_populates="activity_logs")
