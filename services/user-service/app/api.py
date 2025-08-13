@@ -3,7 +3,9 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from . import models, schemas, security
 from .database import get_db
@@ -12,66 +14,93 @@ router = APIRouter()
 
 
 @router.get("/users/me", response_model=schemas.UserRead)
-def read_me(
+async def read_me(
     payload: dict = Depends(security.get_current_payload),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = db.get(models.User, UUID(str(user_id)))
+    user = await db.get(
+        models.User,
+        UUID(str(user_id)),
+        options=[
+            selectinload(models.User.roles),
+            selectinload(models.User.sectors),
+        ],
+    )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
 @router.get("/users", response_model=list[schemas.UserRead])
-def list_users(
+async def list_users(
     page: int = 1,
     page_size: int = 10,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(security.require_roles(["admin", "manager"])),
 ):
     offset = (page - 1) * page_size
-    users = db.query(models.User).offset(offset).limit(page_size).all()
+    result = await db.execute(
+        select(models.User)
+        .options(
+            selectinload(models.User.roles),
+            selectinload(models.User.sectors),
+        )
+        .offset(offset)
+        .limit(page_size)
+    )
+    users = result.scalars().all()
     return users
 
 
 @router.post("/users", response_model=schemas.UserRead, status_code=201)
-def create_user(
+async def create_user(
     user_in: schemas.UserCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(security.require_roles(["admin", "manager"], ["user"])),
 ):
     security.enforce_allowed_roles(payload, user_in.roles)
-    existing = db.query(models.User).filter_by(email=user_in.email).first()
+    existing = (
+        (await db.execute(select(models.User).filter_by(email=user_in.email)))
+        .scalars()
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     user = models.User(email=user_in.email, full_name=user_in.full_name)
     if user_in.roles:
-        roles = db.query(models.Role).filter(models.Role.name.in_(user_in.roles)).all()
-        user.roles = roles
-    if user_in.sectors:
-        sectors = (
-            db.query(models.Sector)
-            .filter(models.Sector.name.in_(user_in.sectors))
-            .all()
+        roles_result = await db.execute(
+            select(models.Role).filter(models.Role.name.in_(user_in.roles))
         )
-        user.sectors = sectors
+        user.roles = roles_result.scalars().all()
+    if user_in.sectors:
+        sectors_result = await db.execute(
+            select(models.Sector).filter(models.Sector.name.in_(user_in.sectors))
+        )
+        user.sectors = sectors_result.scalars().all()
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user, attribute_names=["roles", "sectors"])
     return user
 
 
 @router.patch("/users/{user_id}", response_model=schemas.UserRead)
-def update_user(
+async def update_user(
     user_id: UUID,
     user_in: schemas.UserUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(security.require_roles(["admin", "manager"], ["user"])),
 ):
-    user = db.get(models.User, user_id)
+    user = await db.get(
+        models.User,
+        user_id,
+        options=[
+            selectinload(models.User.roles),
+            selectinload(models.User.sectors),
+        ],
+    )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if "manager" in payload.get("roles", []) and any(
@@ -84,31 +113,33 @@ def update_user(
     if user_in.full_name is not None:
         user.full_name = user_in.full_name
     if user_in.roles is not None:
-        roles = db.query(models.Role).filter(models.Role.name.in_(user_in.roles)).all()
-        user.roles = roles
-    if user_in.sectors is not None:
-        sectors = (
-            db.query(models.Sector)
-            .filter(models.Sector.name.in_(user_in.sectors))
-            .all()
+        roles_result = await db.execute(
+            select(models.Role).filter(models.Role.name.in_(user_in.roles))
         )
-        user.sectors = sectors
-    db.commit()
-    db.refresh(user)
+        user.roles = roles_result.scalars().all()
+    if user_in.sectors is not None:
+        sectors_result = await db.execute(
+            select(models.Sector).filter(models.Sector.name.in_(user_in.sectors))
+        )
+        user.sectors = sectors_result.scalars().all()
+    await db.commit()
+    await db.refresh(user, attribute_names=["roles", "sectors"])
     return user
 
 
 @router.get("/roles", response_model=list[schemas.RoleRead])
-def list_roles(
-    db: Session = Depends(get_db),
+async def list_roles(
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(security.require_roles(["admin", "manager"])),
 ):
-    return db.query(models.Role).all()
+    result = await db.execute(select(models.Role))
+    return result.scalars().all()
 
 
 @router.get("/sectors", response_model=list[schemas.SectorRead])
-def list_sectors(
-    db: Session = Depends(get_db),
+async def list_sectors(
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(security.get_current_payload),
 ):
-    return db.query(models.Sector).all()
+    result = await db.execute(select(models.Sector))
+    return result.scalars().all()
