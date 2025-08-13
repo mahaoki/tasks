@@ -11,6 +11,7 @@ cryptography
 fakeredis
 pytest
 pytest-cov
+pytest-asyncio
 httpx
 pydantic-settings
 prometheus-client

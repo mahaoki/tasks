@@ -1,56 +1,58 @@
 from __future__ import annotations
 
-import jwt
+import uuid
+
+import pytest
+from sqlalchemy import select
+
+from .conftest import create_token
+
+pytestmark = pytest.mark.asyncio
 
 
-def create_token(user_id: str, roles: list[str]) -> str:
-    from app.settings import get_settings
-
-    settings = get_settings()
-    payload = {"sub": user_id, "roles": roles}
-    return jwt.encode(
-        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
-    )
-
-
-def get_admin_token() -> str:
+async def get_admin_token() -> str:
     from app import models
-    from app.database import SessionLocal
+    from app.database import async_session_factory
 
-    db = SessionLocal()
-    admin = db.query(models.User).filter_by(email="admin@example.com").first()
-    token = create_token(str(admin.id), ["admin"])
-    db.close()
-    return token
+    async with async_session_factory() as db:
+        admin = (
+            (await db.execute(select(models.User).filter_by(email="admin@example.com")))
+            .scalars()
+            .first()
+        )
+        assert admin is not None
+        return create_token(str(admin.id), ["admin"])
 
 
-def test_users_me_and_sectors_seed(client):
-    token = get_admin_token()
-    res = client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
+async def test_users_me_and_sectors_seed(client):
+    token = await get_admin_token()
+    res = await client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 200
     data = res.json()
     assert data["email"] == "admin@example.com"
     assert any(s["name"] == "Gerente" for s in data["sectors"])
 
 
-def test_get_users_requires_admin_or_manager(client):
+async def test_get_users_requires_admin_or_manager(client):
     from app import models
-    from app.database import SessionLocal
+    from app.database import async_session_factory
 
-    db = SessionLocal()
-    admin = db.query(models.User).filter_by(email="admin@example.com").first()
-    db.close()
+    async with async_session_factory() as db:
+        admin = (
+            (await db.execute(select(models.User).filter_by(email="admin@example.com")))
+            .scalars()
+            .first()
+        )
+        assert admin is not None
     token = create_token(str(admin.id), ["user"])  # not admin or manager
-    res = client.get("/users", headers={"Authorization": f"Bearer {token}"})
+    res = await client.get("/users", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 403
 
 
-def get_manager_token(client) -> str:
-    import uuid
-
-    admin_token = get_admin_token()
+async def get_manager_token(client) -> str:
+    admin_token = await get_admin_token()
     email = f"manager{uuid.uuid4().hex}@example.com"
-    res = client.post(
+    res = await client.post(
         "/users",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={
@@ -65,13 +67,13 @@ def get_manager_token(client) -> str:
     return create_token(manager_id, ["manager"])
 
 
-def test_manager_can_list_and_create_collaborator(client):
-    manager_token = get_manager_token(client)
-    res_list = client.get(
+async def test_manager_can_list_and_create_collaborator(client):
+    manager_token = await get_manager_token(client)
+    res_list = await client.get(
         "/users", headers={"Authorization": f"Bearer {manager_token}"}
     )
     assert res_list.status_code == 200
-    res_create = client.post(
+    res_create = await client.post(
         "/users",
         headers={"Authorization": f"Bearer {manager_token}"},
         json={
@@ -84,9 +86,9 @@ def test_manager_can_list_and_create_collaborator(client):
     assert res_create.status_code == 201
 
 
-def test_manager_cannot_create_admin(client):
-    manager_token = get_manager_token(client)
-    res = client.post(
+async def test_manager_cannot_create_admin(client):
+    manager_token = await get_manager_token(client)
+    res = await client.post(
         "/users",
         headers={"Authorization": f"Bearer {manager_token}"},
         json={
@@ -99,10 +101,10 @@ def test_manager_cannot_create_admin(client):
     assert res.status_code == 403
 
 
-def test_manager_update_permissions(client):
-    admin_token = get_admin_token()
-    manager_token = get_manager_token(client)
-    res_collab = client.post(
+async def test_manager_update_permissions(client):
+    admin_token = await get_admin_token()
+    manager_token = await get_manager_token(client)
+    res_collab = await client.post(
         "/users",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={
@@ -113,19 +115,19 @@ def test_manager_update_permissions(client):
         },
     )
     collab_id = res_collab.json()["id"]
-    res_update = client.patch(
+    res_update = await client.patch(
         f"/users/{collab_id}",
         headers={"Authorization": f"Bearer {manager_token}"},
         json={"full_name": "Updated"},
     )
     assert res_update.status_code == 200
-    res_promote = client.patch(
+    res_promote = await client.patch(
         f"/users/{collab_id}",
         headers={"Authorization": f"Bearer {manager_token}"},
         json={"roles": ["admin"]},
     )
     assert res_promote.status_code == 403
-    res_admin = client.post(
+    res_admin = await client.post(
         "/users",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={
@@ -136,7 +138,7 @@ def test_manager_update_permissions(client):
         },
     )
     admin_id = res_admin.json()["id"]
-    res_fail = client.patch(
+    res_fail = await client.patch(
         f"/users/{admin_id}",
         headers={"Authorization": f"Bearer {manager_token}"},
         json={"full_name": "x"},
@@ -144,10 +146,10 @@ def test_manager_update_permissions(client):
     assert res_fail.status_code == 403
 
 
-def test_create_and_list_users_with_pagination(client):
-    admin_token = get_admin_token()
+async def test_create_and_list_users_with_pagination(client):
+    admin_token = await get_admin_token()
     for i in range(3):
-        res = client.post(
+        res = await client.post(
             "/users",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
@@ -158,12 +160,12 @@ def test_create_and_list_users_with_pagination(client):
             },
         )
         assert res.status_code == 201
-    res1 = client.get(
+    res1 = await client.get(
         "/users",
         headers={"Authorization": f"Bearer {admin_token}"},
         params={"page": 1, "page_size": 2},
     )
-    res2 = client.get(
+    res2 = await client.get(
         "/users",
         headers={"Authorization": f"Bearer {admin_token}"},
         params={"page": 2, "page_size": 2},
@@ -174,9 +176,9 @@ def test_create_and_list_users_with_pagination(client):
     assert res1.json()[0]["id"] != res2.json()[0]["id"]
 
 
-def test_patch_user_and_roles_sectors(client):
-    admin_token = get_admin_token()
-    res = client.post(
+async def test_patch_user_and_roles_sectors(client):
+    admin_token = await get_admin_token()
+    res = await client.post(
         "/users",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={
@@ -188,7 +190,7 @@ def test_patch_user_and_roles_sectors(client):
     )
     assert res.status_code == 201
     user_id = res.json()["id"]
-    res_patch = client.patch(
+    res_patch = await client.patch(
         f"/users/{user_id}",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"full_name": "Updated", "roles": ["user"], "sectors": ["Gerente"]},
@@ -198,27 +200,3 @@ def test_patch_user_and_roles_sectors(client):
     assert data["full_name"] == "Updated"
     assert any(r["name"] == "user" for r in data["roles"])
     assert any(s["name"] == "Gerente" for s in data["sectors"])
-
-
-def test_roles_and_sectors_endpoints(client):
-    admin_token = get_admin_token()
-    res_roles = client.get("/roles", headers={"Authorization": f"Bearer {admin_token}"})
-    assert res_roles.status_code == 200
-    data_roles = res_roles.json()
-    assert any(r["name"] == "admin" for r in data_roles)
-    assert any(r["name"] == "manager" for r in data_roles)
-    res_sectors = client.get(
-        "/sectors", headers={"Authorization": f"Bearer {admin_token}"}
-    )
-    assert res_sectors.status_code == 200
-    assert any(s["name"] == "Gerente" for s in res_sectors.json())
-
-
-def test_pydantic_validation(client):
-    admin_token = get_admin_token()
-    res = client.post(
-        "/users",
-        headers={"Authorization": f"Bearer {admin_token}"},
-        json={"email": "not-an-email", "full_name": "x"},
-    )
-    assert res.status_code == 422

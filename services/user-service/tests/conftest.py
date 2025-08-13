@@ -1,20 +1,26 @@
 from __future__ import annotations
 
+import os
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Generator
+from typing import AsyncIterator
 
+import asyncpg
 import jwt
 import pytest
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 
-@pytest.fixture(scope="function")
-def client(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> Generator[TestClient, None, None]:
-    db_path = tmp_path / "test.db"
-    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+@pytest_asyncio.fixture(scope="function")
+async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[AsyncClient]:
+    database_url = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/test",
+    )
+    monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("JWT_SECRET_KEY", "secret")
     monkeypatch.setenv("JWT_ALGORITHM", "HS256")
     monkeypatch.setenv("SMTP_HOST", "smtp")
@@ -27,13 +33,30 @@ def client(
     for key in list(sys.modules):
         if key.startswith("app"):
             sys.modules.pop(key, None)
-    from app.database import Base, engine  # noqa: E402
+    from app.database import Base, async_engine  # noqa: E402
     from app.main import app  # noqa: E402
 
-    Base.metadata.create_all(bind=engine)
+    pool = await asyncpg.create_pool(database_url.replace("+asyncpg", ""))
+    async with pool.acquire() as conn:
+        await conn.execute("CREATE SCHEMA IF NOT EXISTS users")
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
-    with TestClient(app) as c:
-        yield c
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await app.router.startup()
+        try:
+            yield
+        finally:
+            await app.router.shutdown()
+
+    async with lifespan(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            yield ac
+
+    await pool.close()
 
 
 def create_token(user_id: str, roles: list[str]) -> str:

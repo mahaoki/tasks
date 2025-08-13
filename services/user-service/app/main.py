@@ -81,7 +81,7 @@ async def on_startup() -> None:  # pragma: no cover - database side effects
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     # Seed initial data
-    async with async_session_factory() as db:
+    async with async_session_factory() as db:  # type: AsyncSession
         await seed_initial_data(db)
 
 
