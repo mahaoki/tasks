@@ -28,11 +28,45 @@ Crie um arquivo `.env` local baseado em `.env.example`:
 cp .env.example .env
 ```
 
-Este arquivo inclui, entre outras variáveis, `TASKS_DATABASE_URL`, que deve usar
-um driver assíncrono (por padrão `sqlite+aiosqlite:///./tasks.db`).
+O arquivo demonstra como cada serviço aponta para o mesmo banco Postgres
+utilizando schemas distintos via `search_path` e driver assíncrono
+`postgresql+asyncpg`:
+
+```bash
+AUTH_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dauth
+USER_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dusers
+TASKS_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dtasks
+```
+
 O arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesmas
 variáveis diretamente no ambiente de execução ou utilize mecanismos seguros como
 Docker secrets e configurações da plataforma escolhida.
+
+## Migrações de banco
+
+Para aplicar as migrações de cada serviço em um único banco Postgres:
+
+1. Garanta que o banco esteja acessível.
+2. Defina a URL do serviço com o `search_path` adequado.
+3. Execute o Alembic do serviço correspondente.
+
+Exemplo:
+
+```bash
+# Auth
+export DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dauth"
+alembic -c services/auth-service/alembic.ini upgrade head
+
+# Users
+export DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dusers"
+alembic -c services/user-service/alembic.ini upgrade head
+
+# Tasks
+export TASKS_DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dtasks"
+alembic -c services/task-service/alembic.ini upgrade head
+```
+
+Cada comando aplica as migrações no schema indicado pelo `search_path`.
 
 ## Execução com Docker Compose
 
