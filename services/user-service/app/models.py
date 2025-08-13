@@ -53,12 +53,12 @@ class User(Base):
 
     roles: Mapped[list["Role"]] = relationship(
         "Role",
-        secondary="user_roles",
+        secondary=UserRole.__table__,
         back_populates="users",
     )
     sectors: Mapped[list["Sector"]] = relationship(
         "Sector",
-        secondary="user_sectors",
+        secondary=UserSector.__table__,
         back_populates="users",
     )
 
@@ -72,7 +72,7 @@ class Role(Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
     users: Mapped[list[User]] = relationship(
-        "User", secondary="user_roles", back_populates="roles"
+        "User", secondary=UserRole.__table__, back_populates="roles"
     )
 
 
@@ -85,5 +85,5 @@ class Sector(Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
     users: Mapped[list[User]] = relationship(
-        "User", secondary="user_sectors", back_populates="sectors"
+        "User", secondary=UserSector.__table__, back_populates="sectors"
     )
