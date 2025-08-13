@@ -1,28 +1,20 @@
 from __future__ import annotations
 
-import os
 import sys
-from collections.abc import AsyncIterator
 from pathlib import Path
 
 import pytest
-import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-os.environ["TASKS_DATABASE_URL"] = "sqlite+aiosqlite://"
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.api.tasks import get_task_service  # noqa: E402
-from app.core.database import Base, get_session  # noqa: E402
 from app.domain.schemas import (  # noqa: E402
     ErrorResponse,
     ProjectCreate,
     TaskCreate,
     TaskListResponse,
 )
-from app.main import app  # noqa: E402
 from app.repositories import ProjectRepository  # noqa: E402
 from app.services.tasks import TaskService  # noqa: E402
 
@@ -35,29 +27,6 @@ class DummyUserClient:
 
     async def get_sector_name(self, sector_id):  # pragma: no cover - simple stub
         return "Sector"
-
-
-@pytest_asyncio.fixture()
-async def client() -> AsyncIterator[tuple[AsyncClient, AsyncSession]]:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async with engine.begin() as conn:
-        await conn.exec_driver_sql("ATTACH DATABASE ':memory:' AS tasks")
-        await conn.run_sync(Base.metadata.create_all)
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
-    async with async_session() as session:
-
-        async def override_get_session() -> AsyncIterator[AsyncSession]:
-            yield session
-
-        app.dependency_overrides[get_session] = override_get_session
-        app.dependency_overrides[get_task_service] = lambda: TaskService(
-            user_client=DummyUserClient()
-        )
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as ac:
-            yield ac, session
-        app.dependency_overrides.clear()
-    await engine.dispose()
 
 
 @pytest.mark.asyncio()

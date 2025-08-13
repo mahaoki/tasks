@@ -5,30 +5,15 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-import pytest_asyncio
+from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from app.core.database import Base
 from app.domain.models import Task
 from app.domain.schemas import ProjectCreate, Status, TaskCreate
 from app.repositories import ProjectRepository
 from app.services.tasks import TaskService
-
 sys.path.pop(0)
-from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-
-@pytest_asyncio.fixture()
-async def session() -> AsyncSession:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async with engine.begin() as conn:
-        await conn.exec_driver_sql("ATTACH DATABASE ':memory:' AS tasks")
-        await conn.run_sync(Base.metadata.create_all)
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
-    async with async_session() as session:
-        yield session
-    await engine.dispose()
 
 
 class DummyUserClient:
