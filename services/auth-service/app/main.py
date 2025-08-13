@@ -10,7 +10,8 @@ from prometheus_client import make_asgi_app
 
 from . import security
 from .api import router as auth_router
-from .database import Base, engine
+from .database import Base
+from .database import async_engine as engine
 
 request_id_ctx = ContextVar("request_id", default="")
 
@@ -66,8 +67,9 @@ async def add_request_id(request: Request, call_next):
 
 
 try:  # pragma: no cover - optional tracing
-    from opentelemetry.instrumentation.fastapi import \
-        FastAPIInstrumentor  # type: ignore
+    from opentelemetry.instrumentation.fastapi import (  # type: ignore
+        FastAPIInstrumentor,
+    )
 except Exception:  # pragma: no cover
     FastAPIInstrumentor = None
 
@@ -76,8 +78,9 @@ if FastAPIInstrumentor:  # pragma: no cover - optional tracing
 
 
 @app.on_event("startup")
-def on_startup() -> None:  # pragma: no cover - database creation side effect
-    Base.metadata.create_all(bind=engine)
+async def on_startup() -> None:  # pragma: no cover - database creation side effect
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @app.get("/healthz")
