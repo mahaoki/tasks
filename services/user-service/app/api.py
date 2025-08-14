@@ -39,19 +39,26 @@ async def read_me(
 async def list_users(
     page: int = 1,
     page_size: int = 10,
+    ids: str | None = None,
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(security.require_roles(["admin", "manager"])),
 ):
-    offset = (page - 1) * page_size
-    result = await db.execute(
-        select(models.User)
-        .options(
-            selectinload(models.User.roles),
-            selectinload(models.User.sectors),
-        )
-        .offset(offset)
-        .limit(page_size)
+    stmt = select(models.User).options(
+        selectinload(models.User.roles),
+        selectinload(models.User.sectors),
     )
+
+    if ids:
+        try:
+            id_list = [UUID(id_str) for id_str in ids.split(",")]
+        except ValueError as exc:  # pragma: no cover - simple validation
+            raise HTTPException(status_code=400, detail="Invalid ids") from exc
+        stmt = stmt.where(models.User.id.in_(id_list))
+    else:
+        offset = (page - 1) * page_size
+        stmt = stmt.offset(offset).limit(page_size)
+
+    result = await db.execute(stmt)
     users = result.scalars().all()
     return users
 

@@ -200,3 +200,30 @@ async def test_patch_user_and_roles_sectors(client):
     assert data["full_name"] == "Updated"
     assert any(r["name"] == "user" for r in data["roles"])
     assert any(s["name"] == "Gerente" for s in data["sectors"])
+
+
+async def test_list_users_filter_by_ids(client):
+    admin_token = await get_admin_token()
+    ids: list[str] = []
+    for i in range(3):
+        res = await client.post(
+            "/users",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            json={
+                "email": f"filter{uuid.uuid4().hex}@example.com",
+                "full_name": f"Filter {i}",
+                "roles": ["user"],
+                "sectors": [],
+            },
+        )
+        assert res.status_code == 201
+        ids.append(res.json()["id"])
+
+    res = await client.get(
+        "/users",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        params={"ids": ",".join(ids[:2])},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert {u["id"] for u in data} == set(ids[:2])
