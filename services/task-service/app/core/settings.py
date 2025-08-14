@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     user_service_base_url: AnyHttpUrl = Field(
         "http://user-service", alias="USER_SERVICE_BASE_URL"
     )
-    cors_allowed_origins: List[str] = Field(["*"], alias="CORS_ALLOWED_ORIGINS")
+    cors_allow_origins: List[str] = Field(["*"], alias="CORS_ALLOW_ORIGINS")
     log_level: str = Field("INFO", alias="LOG_LEVEL")
     pagination_default: int = Field(50, alias="PAGINATION_DEFAULT")
     pagination_max: int = Field(100, alias="PAGINATION_MAX")
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
         extra="forbid",
     )
 
-    @field_validator("cors_allowed_origins", mode="before")
+    @field_validator("cors_allow_origins", mode="before")
     @classmethod
     def split_origins(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
