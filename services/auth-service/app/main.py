@@ -6,12 +6,16 @@ import uuid
 from contextvars import ContextVar
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import make_asgi_app
 
 from . import security
 from .api import router as auth_router
 from .database import Base
 from .database import async_engine as engine
+from .database import async_session_factory
+from .seed import seed_initial_data
+from .settings import get_settings
 
 request_id_ctx = ContextVar("request_id", default="")
 
@@ -49,7 +53,16 @@ def setup_logging() -> None:
 
 setup_logging()
 
+settings = get_settings()
+
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allow_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
@@ -81,6 +94,8 @@ if FastAPIInstrumentor:  # pragma: no cover - optional tracing
 async def on_startup() -> None:  # pragma: no cover - database creation side effect
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    async with async_session_factory() as db:
+        await seed_initial_data(db)
 
 
 @app.get("/healthz")

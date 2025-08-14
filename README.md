@@ -82,6 +82,10 @@ docker compose up
 As aplicações web e APIs estarão acessíveis em `app.tasks.localhost` e
 `api.tasks.localhost`.
 
+O `user-service` cria automaticamente um usuário administrador com e-mail
+`admin@example.com`. Um registro correspondente é gerado no `auth-service`
+com a senha inicial `admin`.
+
 ## Desenvolvimento local no macOS
 
 Para executar a aplicação web localmente em um ambiente macOS:
