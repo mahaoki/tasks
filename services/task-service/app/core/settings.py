@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     tasks_database_url: AnyUrl = Field(
-        "postgresql+asyncpg://app:app@postgres/app?options=-csearch_path%3Dtasks",
+        "postgresql+asyncpg://app:app@postgres/app",
         alias="TASKS_DATABASE_URL",
     )
     auth_jwks_url: AnyHttpUrl = Field(

@@ -29,13 +29,12 @@ cp .env.example .env
 ```
 
 O arquivo demonstra como cada serviço aponta para o mesmo banco Postgres
-utilizando schemas distintos via `search_path` e driver assíncrono
-`postgresql+asyncpg`:
+utilizando schemas distintos com o driver assíncrono `postgresql+asyncpg`:
 
 ```bash
-AUTH_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dauth
-USER_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dusers
-TASKS_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dtasks
+AUTH_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app
+USER_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app
+TASKS_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app
 ```
 
 O arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesmas
@@ -47,22 +46,22 @@ Docker secrets e configurações da plataforma escolhida.
 Para aplicar as migrações de cada serviço em um único banco Postgres:
 
 1. Garanta que o banco esteja acessível.
-2. Defina a URL do serviço com o `search_path` adequado.
+2. Defina a URL do serviço.
 3. Execute o Alembic do serviço correspondente.
 
 Exemplo:
 
 ```bash
 # Auth
-export DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dauth"
+export DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app"
 alembic -c services/auth-service/alembic.ini upgrade head
 
 # Users
-export DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dusers"
+export DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app"
 alembic -c services/user-service/alembic.ini upgrade head
 
 # Tasks
-export TASKS_DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app?options=-csearch_path%3Dtasks"
+export TASKS_DATABASE_URL="postgresql+asyncpg://app:app@localhost:5432/app"
 alembic -c services/task-service/alembic.ini upgrade head
 ```
 
