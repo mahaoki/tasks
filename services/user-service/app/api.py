@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from . import models, schemas, security
 from .database import get_db
-from .repositories import ProjectMemberRepository
+from .repositories import ProjectMemberRepository, SectorRepository
 
 router = APIRouter()
 
@@ -151,6 +151,21 @@ async def list_sectors(
 ):
     result = await db.execute(select(models.Sector))
     return result.scalars().all()
+
+
+sector_repo = SectorRepository()
+
+
+@router.get("/sectors/{sector_id}", response_model=schemas.SectorRead)
+async def get_sector(
+    sector_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(security.get_current_payload),
+):
+    sector = await sector_repo.get(db, sector_id)
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector not found")
+    return sector
 
 
 project_member_repo = ProjectMemberRepository()
