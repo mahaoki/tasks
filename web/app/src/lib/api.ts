@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const baseURL =
+  typeof window === 'undefined'
+    ? process.env.INTERNAL_API_URL
+    : process.env.NEXT_PUBLIC_API_URL;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://api.tasks.localhost',
+  baseURL: baseURL || 'http://api.tasks.localhost',
   withCredentials: true,
 });
 

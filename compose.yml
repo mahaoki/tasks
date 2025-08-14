@@ -126,6 +126,8 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+    environment:
+      INTERNAL_API_URL: http://auth-service:8000
     networks:
       - internal
       - traefik
