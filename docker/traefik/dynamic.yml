@@ -28,6 +28,16 @@ http:
           - "http://app.tasks.localhost"
           - "https://app.tasks.localhost"
         accessControlAllowCredentials: true
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "PUT"
+          - "PATCH"
+          - "DELETE"
+          - "OPTIONS"
         addVaryHeader: true
     compress:
       compress: {}
