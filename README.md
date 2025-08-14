@@ -35,11 +35,14 @@ utilizando schemas distintos com o driver assíncrono `postgresql+asyncpg`:
 AUTH_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app
 USER_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app
 TASKS_DATABASE_URL=postgresql+asyncpg://app:app@localhost:5432/app
+CORS_ALLOW_ORIGINS=http://localhost
 ```
 
 O arquivo **não deve** ser versionado. Em pipelines de CI/CD, defina as mesmas
 variáveis diretamente no ambiente de execução ou utilize mecanismos seguros como
 Docker secrets e configurações da plataforma escolhida.
+
+`CORS_ALLOW_ORIGINS` aceita uma lista separada por vírgulas com as origens permitidas pelo middleware CORS.
 
 ## Migrações de banco
 

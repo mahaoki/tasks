@@ -5,6 +5,7 @@ from .api.health import router as health_router
 from .api.router import router
 from .core.logging import configure_logging
 from .core.middleware import MetricsMiddleware, RequestIDMiddleware
+from .core.settings import settings
 
 configure_logging()
 
@@ -14,10 +15,7 @@ app.add_middleware(RequestIDMiddleware)
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://app.tasks.localhost",
-        "http://app.tasks.localhost",
-    ],
+    allow_origins=settings.cors_allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
