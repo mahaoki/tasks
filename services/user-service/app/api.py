@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from . import models, schemas, security
 from .database import get_db
+from .repositories import ProjectMemberRepository
 
 router = APIRouter()
 
@@ -143,3 +144,46 @@ async def list_sectors(
 ):
     result = await db.execute(select(models.Sector))
     return result.scalars().all()
+
+
+project_member_repo = ProjectMemberRepository()
+
+
+@router.get(
+    "/projects/{project_id}/members",
+    response_model=dict[str, list[schemas.ProjectMemberRead]],
+)
+async def list_project_members(
+    project_id: int, db: AsyncSession = Depends(get_db)
+) -> dict[str, list[schemas.ProjectMemberRead]]:
+    members = await project_member_repo.list(db, project_id)
+    return {"members": members}
+
+
+@router.put(
+    "/projects/{project_id}/members/{user_id}",
+    response_model=schemas.ProjectMemberRead,
+)
+async def put_project_member(
+    project_id: int,
+    user_id: UUID,
+    member_in: schemas.ProjectMemberUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> schemas.ProjectMemberRead:
+    user = await db.get(models.User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    member = await project_member_repo.upsert(
+        db, project_id, user_id, member_in.role.value
+    )
+    return member
+
+
+@router.delete("/projects/{project_id}/members/{user_id}", status_code=204)
+async def delete_project_member(
+    project_id: int, user_id: UUID, db: AsyncSession = Depends(get_db)
+) -> Response:
+    success = await project_member_repo.delete(db, project_id, user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Member not found")
+    return Response(status_code=204)

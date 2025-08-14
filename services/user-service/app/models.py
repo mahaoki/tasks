@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -62,6 +62,10 @@ class User(Base):
         back_populates="users",
     )
 
+    project_members: Mapped[list["ProjectMember"]] = relationship(
+        "ProjectMember", back_populates="user", cascade="all, delete-orphan"
+    )
+
 
 class Role(Base):
     __tablename__ = "roles"
@@ -87,3 +91,17 @@ class Sector(Base):
     users: Mapped[list[User]] = relationship(
         "User", secondary=UserSector.__table__, back_populates="sectors"
     )
+
+
+class ProjectMember(Base):
+    __tablename__ = "project_members"
+
+    project_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[PGUUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    role: Mapped[str] = mapped_column(String, nullable=False, default="member")
+
+    user: Mapped[User] = relationship("User", back_populates="project_members")

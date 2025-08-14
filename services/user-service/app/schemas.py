@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -40,6 +41,23 @@ class UserRead(BaseModel):
     full_name: str | None = None
     roles: list[RoleRead] = []
     sectors: list[SectorRead] = []
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectRole(str, Enum):
+    OWNER = "owner"
+    MEMBER = "member"
+    VIEWER = "viewer"
+
+
+class ProjectMemberUpdate(BaseModel):
+    role: ProjectRole
+
+
+class ProjectMemberRead(ProjectMemberUpdate):
+    user_id: UUID
 
     class Config:
         from_attributes = True
