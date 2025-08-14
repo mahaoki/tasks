@@ -9,7 +9,7 @@
 - **Linguagem & Tooling**
   - Backend: Python 3.11+, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy 2.x, Alembic, httpx, passlib[bcrypt].
   - Frontend: Next.js (TypeScript), ShadCN UI, TailwindCSS, React Query.
-  - Infra Dev: Docker/Compose, Traefik, Postgres, Redis (session/rate limit), Mailhog (SMTP fake).
+  - Infra Dev: Docker/Compose, Traefik, Postgres, Redis (session/rate limit), Mailpit (SMTP fake).
 - **Separação de responsabilidades**
   - `auth-service`: autenticação, tokens (JWT), refresh, políticas de escopo.
   - `user-service`: CRUD de usuários e perfis (roles), relação usuário↔setores (placeholder para futuro), perfis e permissões básicas.
@@ -82,7 +82,7 @@ repo/
 ### Fase A — Fundação
 - [ ] Criar monorepo e estrutura inicial (pastas acima).
 - [ ] Definir **convenções** (format, lint, typecheck, test) e **pre-commit**.
-- [ ] Adicionar **compose.yml** com serviços: traefik, postgres, redis, mailhog, auth-service, user-service, web.
+- [ ] Adicionar **compose.yml** com serviços: traefik, postgres, redis, mailpit, auth-service, user-service, web.
 - [ ] Provisionar Traefik com middlewares (gzip, headers, rate-limit), routers `api.tasks.localhost` (backends) e `app.tasks.localhost` (frontend).
 - [ ] Postgres com **schemas** `auth` e `users` no init SQL.
 - [ ] Documentar `.env.example` (chaves JWT, DATABASE_URLs, SMTP, CORS).
@@ -95,7 +95,7 @@ repo/
   - [ ] `POST /auth/register` (apenas admin no MVP via seed).
   - [ ] `POST /auth/login` (email + senha) → `access_token` (15min) + `refresh_token` (7d).
   - [ ] `POST /auth/refresh`.
-  - [ ] `POST /auth/forgot-password` → e-mail com token (Mailhog em dev).
+  - [ ] `POST /auth/forgot-password` → e-mail com token (Mailpit em dev).
   - [ ] `POST /auth/reset-password` (token de 30 min, one-time use).
   - [ ] `GET /auth/me` (claims + roles obtidas do user-service).
 - [ ] Segurança & políticas:
@@ -248,12 +248,12 @@ repo/
 ### Operação & Observabilidade
 - [ ] Healthchecks e timeouts configurados (readiness/liveness nos serviços).
 - [ ] Logs com `request_id`; propagar `X-Request-ID` do Traefik.
-- [ ] Documentar como debugar (links do Mailhog, pgcli, etc.).
+- [ ] Documentar como debugar (links do Mailpit, pgcli, etc.).
 
 ---
 
 ## 9. Critérios de Aceitação do MVP
-- Login, refresh e reset de senha funcionando ponta-a-ponta (incluindo e-mail em dev via Mailhog).
+- Login, refresh e reset de senha funcionando ponta-a-ponta (incluindo e-mail em dev via Mailpit).
 - Dashboard exibe dados de `/users/me` com roles e setores do usuário logado.
 - Seeds criam: admin (Auth) e setores + role Gerente (Users).
 - Domínios locais acessíveis: `https://app.tasks.localhost` e `https://api.tasks.localhost`.
